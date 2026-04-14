@@ -211,6 +211,20 @@ cd bus
 python3 bus.py --route 1815 --stop Taipei
 ```
 
+Query a specific stop:
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop "Xinshan Water Purification Plant"
+```
+
+Example for the actual TDX Chinese stop name:
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場
+```
+
 Outbound only:
 
 ```bash
@@ -223,6 +237,21 @@ Inbound only:
 ```bash
 cd bus
 python3 bus.py --route 1815 --direction 1
+```
+
+Specific stop with direction:
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 1
+```
+
+Specific stop with debug log:
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0 --debug
 ```
 
 ## Command Reference
@@ -257,6 +286,12 @@ python3 bus.py --route 1815 --stop Taipei
 - Show only stops with `Taipei` in the stop name
 
 ```bash
+python3 bus.py --route 1815 --stop 新山淨水場
+```
+
+- Show only records for the stop `新山淨水場`
+
+```bash
 python3 bus.py --route 1815 --direction 0
 ```
 
@@ -267,6 +302,18 @@ python3 bus.py --route 1815 --direction 1
 ```
 
 - Show inbound only
+
+```bash
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
+```
+
+- Show only `新山淨水場` for outbound direction
+
+```bash
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 1
+```
+
+- Show only `新山淨水場` for inbound direction
 
 ## Debug Log
 
@@ -606,6 +653,13 @@ cd bus
 python3 bus.py --route 1815 --stop 台北
 ```
 
+查指定站點：
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場
+```
+
 只查去程：
 
 ```bash
@@ -618,6 +672,21 @@ python3 bus.py --route 1815 --direction 0
 ```bash
 cd bus
 python3 bus.py --route 1815 --direction 1
+```
+
+查指定站點加方向：
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 1
+```
+
+查指定站點並寫入 debug log：
+
+```bash
+cd bus
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0 --debug
 ```
 
 ## 各個 command 的用途
@@ -652,6 +721,12 @@ python3 bus.py --route 1815 --stop 台北
 - 只顯示站名包含 `台北` 的資料
 
 ```bash
+python3 bus.py --route 1815 --stop 新山淨水場
+```
+
+- 只顯示 `新山淨水場` 這個站點的資料
+
+```bash
 python3 bus.py --route 1815 --direction 0
 ```
 
@@ -662,6 +737,18 @@ python3 bus.py --route 1815 --direction 1
 ```
 
 - 只顯示返程
+
+```bash
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
+```
+
+- 只顯示 `新山淨水場` 的去程資料
+
+```bash
+python3 bus.py --route 1815 --stop 新山淨水場 --direction 1
+```
+
+- 只顯示 `新山淨水場` 的返程資料
 
 ## Debug log 說明
 

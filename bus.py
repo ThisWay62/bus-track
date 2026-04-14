@@ -125,13 +125,13 @@ def append_debug_log(title, payload):
     )
 
 
-def record_debug(title, payload, enabled=False):
+def record_debug(title, payload, enabled=False, log_payload=None):
     # Only record debug output when --debug is enabled.
     # 只有在開啟 --debug 時才輸出並寫入除錯資訊。
     if not enabled:
         return
     debug_print(title, payload)
-    append_debug_log(title, payload)
+    append_debug_log(title, log_payload if log_payload is not None else payload)
 
 
 def read_json_response(response):
@@ -303,6 +303,10 @@ def fetch_eta(route_name, access_token, debug=False):
                     "sample": body[:3],
                 },
                 enabled=debug,
+                log_payload={
+                    "count": len(body),
+                    "records": body,
+                },
             )
             return body
     except urllib.error.HTTPError as exc:
@@ -327,6 +331,30 @@ def format_eta(item):
     return STOP_STATUS_TEXT.get(stop_status, "暫無資料")
 
 
+def direction_text(direction):
+    return "去程" if direction == 0 else "返程"
+
+
+def plate_text(item):
+    plate = item.get("PlateNumb")
+    if not plate or plate == "-1":
+        return "未提供"
+    return plate
+
+
+def subroute_text(item):
+    return item.get("SubRouteName", {}).get("Zh_tw") or item.get("RouteName", {}).get(
+        "Zh_tw", "未知路線"
+    )
+
+
+def update_time_text(item):
+    update_time = item.get("UpdateTime") or item.get("DataTime")
+    if not update_time:
+        return "未知"
+    return update_time
+
+
 def filter_rows(rows, stop_keyword=None, direction=None):
     # Narrow the API result set by stop name keyword and direction.
     # 依站名關鍵字與方向，縮小 API 查詢結果。
@@ -346,7 +374,7 @@ def filter_rows(rows, stop_keyword=None, direction=None):
     return result
 
 
-def print_rows(route_name, rows):
+def print_rows(route_name, rows, stop_keyword=None):
     # Print the final result in a terminal-friendly format.
     # 以適合終端機閱讀的方式印出最終結果。
     if not rows:
@@ -354,19 +382,54 @@ def print_rows(route_name, rows):
         print("如果 1815 沒有結果，請再確認是否需要查 1815A、1815B 這類副線。")
         return
 
+    if stop_keyword:
+        rows = sorted(
+            rows,
+            key=lambda row: (
+                row.get("Direction", 99),
+                row.get("EstimateTime") is None,
+                row.get("EstimateTime", 10**9),
+                row.get("SubRouteName", {}).get("Zh_tw", ""),
+                row.get("PlateNumb", ""),
+            ),
+        )
+        current_direction = None
+        for row in rows:
+            direction = row.get("Direction")
+            if direction != current_direction:
+                current_direction = direction
+                print()
+                print(f"[{direction_text(direction)}]")
+
+            stop_name = row.get("StopName", {}).get("Zh_tw", "未知站名")
+            eta_text = format_eta(row)
+            subroute_name = subroute_text(row)
+            plate_number = plate_text(row)
+            stop_sequence = row.get("StopSequence", "?")
+            update_text = update_time_text(row)
+            print(
+                f"{subroute_name} | 站牌: {stop_name} | 車牌: {plate_number} | "
+                f"到站: {eta_text} | 站序: {stop_sequence} | 更新: {update_text}"
+            )
+        return
+
     current_direction = None
     for row in rows:
         direction = row.get("Direction")
         if direction != current_direction:
             current_direction = direction
-            direction_text = "去程" if direction == 0 else "返程"
             print()
-            print(f"[{direction_text}]")
+            print(f"[{direction_text(direction)}]")
 
         stop_name = row.get("StopName", {}).get("Zh_tw", "未知站名")
         stop_sequence = row.get("StopSequence", "?")
         eta_text = format_eta(row)
-        print(f"{stop_sequence:>2}. {stop_name:<20} {eta_text}")
+        subroute_name = subroute_text(row)
+        plate_number = plate_text(row)
+        print(
+            f"{stop_sequence:>2}. {stop_name:<20} {eta_text:<8} "
+            f"子路線: {subroute_name:<8} 車牌: {plate_number}"
+        )
 
 
 def main():
@@ -381,7 +444,7 @@ def main():
     )
     rows = fetch_eta(args.route, access_token, debug=args.debug)
     rows = filter_rows(rows, stop_keyword=args.stop, direction=args.direction)
-    print_rows(args.route, rows)
+    print_rows(args.route, rows, stop_keyword=args.stop)
 
 
 if __name__ == "__main__":
