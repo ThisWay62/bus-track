@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 .tdx_token_cache.json
+tdx_debug_log.json
 config.json
