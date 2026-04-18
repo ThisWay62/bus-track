@@ -6,6 +6,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +28,8 @@ STOP_STATUS_TEXT = {
     4: "今日未營運",
 }
 
+MAIN_ROUTE_OPTIONS = ["1813", "1815"]
+
 
 def parse_args():
     # Command-line options for route, filtering, and debug behavior.
@@ -34,7 +37,8 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="查詢 TDX 公路客運路線的預估到站資訊"
     )
-    parser.add_argument("--route", default="1815", help="路線名稱，預設 1815")
+    parser.add_argument("--route", help="路線名稱，例如 1815")
+    parser.add_argument("--subroute", help="子路線名稱，例如 1815A")
     parser.add_argument("--stop", help="只顯示站名包含這段文字的站")
     parser.add_argument(
         "--direction",
@@ -51,6 +55,11 @@ def parse_args():
         "--debug",
         action="store_true",
         help="印出 request / response 除錯資訊",
+    )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="使用互動式選單選擇主路線、子路線、方向與站點",
     )
     return parser.parse_args()
 
@@ -355,6 +364,107 @@ def update_time_text(item):
     return update_time
 
 
+def get_stop_name(row):
+    return row.get("StopName", {}).get("Zh_tw", "未知站名")
+
+
+def filter_by_subroute(rows, subroute_name=None):
+    if not subroute_name:
+        return rows
+
+    result = []
+    for row in rows:
+        if subroute_text(row) == subroute_name:
+            result.append(row)
+    return result
+
+
+def build_direction_options(rows):
+    options = []
+    for direction in sorted({row.get("Direction") for row in rows}):
+        direction_rows = [row for row in rows if row.get("Direction") == direction]
+        if not direction_rows:
+            continue
+
+        ordered_rows = sorted(
+            direction_rows,
+            key=lambda row: row.get("StopSequence", 10**9),
+        )
+        destination_name = get_stop_name(ordered_rows[-1])
+        options.append(
+            {
+                "value": direction,
+                "label": f"{direction_text(direction)} - 往 {destination_name}",
+            }
+        )
+    return options
+
+
+def build_stop_options(rows):
+    options = []
+    seen = set()
+    for row in sorted(rows, key=lambda item: item.get("StopSequence", 10**9)):
+        stop_name = get_stop_name(row)
+        if stop_name in seen:
+            continue
+        seen.add(stop_name)
+        options.append(stop_name)
+    return options
+
+
+def choose_from_menu(title, options, allow_all=False, all_label="全部"):
+    if not options:
+        raise RuntimeError(f"{title} 沒有可選項目。")
+
+    while True:
+        print()
+        print(title)
+        if allow_all:
+            print(f"0. {all_label}")
+        for index, option in enumerate(options, start=1):
+            label = option["label"] if isinstance(option, dict) else str(option)
+            print(f"{index}. {label}")
+
+        raw = input("請輸入編號: ").strip()
+        if allow_all and raw == "0":
+            return None
+        if not raw.isdigit():
+            print("請輸入數字編號。")
+            continue
+
+        selected_index = int(raw) - 1
+        if 0 <= selected_index < len(options):
+            selected = options[selected_index]
+            return selected["value"] if isinstance(selected, dict) else selected
+
+        print("輸入超出範圍，請重新選擇。")
+
+
+def run_interactive_selection(access_token, debug=False):
+    route_name = choose_from_menu("請選擇主路線", MAIN_ROUTE_OPTIONS)
+    rows = fetch_eta(route_name, access_token, debug=debug)
+
+    subroutes = sorted({subroute_text(row) for row in rows})
+    subroute_name = choose_from_menu("請選擇子路線", subroutes)
+    rows = filter_by_subroute(rows, subroute_name)
+
+    direction_options = build_direction_options(rows)
+    direction = choose_from_menu("請選擇方向", direction_options)
+    rows = filter_rows(rows, direction=direction)
+
+    stop_options = build_stop_options(rows)
+    stop_name = choose_from_menu(
+        "請選擇站點",
+        stop_options,
+        allow_all=True,
+        all_label="全部站點",
+    )
+    if stop_name:
+        rows = [row for row in rows if get_stop_name(row) == stop_name]
+
+    print_rows(route_name, rows, stop_keyword=stop_name)
+
+
 def filter_rows(rows, stop_keyword=None, direction=None):
     # Narrow the API result set by stop name keyword and direction.
     # 依站名關鍵字與方向，縮小 API 查詢結果。
@@ -438,13 +548,20 @@ def main():
     # 主流程：
     # 讀參數 -> 取 token -> 查 ETA -> 篩選 -> 輸出
     args = parse_args()
+    use_interactive = args.interactive or len(sys.argv) == 1
     access_token = get_access_token(
         force_refresh=args.refresh_token,
         debug=args.debug,
     )
-    rows = fetch_eta(args.route, access_token, debug=args.debug)
+    if use_interactive:
+        run_interactive_selection(access_token, debug=args.debug)
+        return
+
+    route_name = args.route or "1815"
+    rows = fetch_eta(route_name, access_token, debug=args.debug)
+    rows = filter_by_subroute(rows, args.subroute)
     rows = filter_rows(rows, stop_keyword=args.stop, direction=args.direction)
-    print_rows(args.route, rows, stop_keyword=args.stop)
+    print_rows(route_name, rows, stop_keyword=args.stop)
 
 
 if __name__ == "__main__":

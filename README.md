@@ -183,6 +183,20 @@ Check Python 3:
 python3 --version
 ```
 
+Interactive menu mode:
+
+```bash
+cd bus
+python3 bus.py
+```
+
+This will guide you through:
+
+1. main route, such as `1813` or `1815`
+2. subroute, such as `1815A` or `1815B`
+3. direction
+4. stop selection, including an `all stops` option
+
 Basic query:
 
 ```bash
@@ -254,6 +268,13 @@ cd bus
 python3 bus.py --route 1815 --stop 新山淨水場 --direction 0 --debug
 ```
 
+Query a specific subroute directly:
+
+```bash
+cd bus
+python3 bus.py --route 1815 --subroute 1815E --direction 1 --stop 新山淨水場
+```
+
 ## Command Reference
 
 ```bash
@@ -262,6 +283,13 @@ python3 bus.py --route 1815
 
 - Query route `1815`
 - Print formatted output only
+
+```bash
+python3 bus.py
+```
+
+- Start the interactive menu
+- Choose main route, subroute, direction, and stop step by step
 
 ```bash
 python3 bus.py --route 1815 --debug
@@ -302,6 +330,13 @@ python3 bus.py --route 1815 --direction 1
 ```
 
 - Show inbound only
+
+```bash
+python3 bus.py --route 1815 --subroute 1815E --direction 1 --stop 新山淨水場
+```
+
+- Query only subroute `1815E`
+- Filter to inbound direction and stop `新山淨水場`
 
 ```bash
 python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
@@ -625,6 +660,20 @@ GET https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/InterCi
 python3 --version
 ```
 
+互動式選單模式：
+
+```bash
+cd bus
+python3 bus.py
+```
+
+程式會依序讓你選：
+
+1. 主路線，例如 `1813` 或 `1815`
+2. 子路線，例如 `1815A`、`1815B`
+3. 方向
+4. 站點，包含「全部站點」選項
+
 基本查詢：
 
 ```bash
@@ -689,6 +738,13 @@ cd bus
 python3 bus.py --route 1815 --stop 新山淨水場 --direction 0 --debug
 ```
 
+直接查指定子路線：
+
+```bash
+cd bus
+python3 bus.py --route 1815 --subroute 1815E --direction 1 --stop 新山淨水場
+```
+
 ## 各個 command 的用途
 
 ```bash
@@ -697,6 +753,13 @@ python3 bus.py --route 1815
 
 - 查詢 `1815` 路線
 - 只印整理後的結果
+
+```bash
+python3 bus.py
+```
+
+- 啟動互動式選單
+- 依序選擇主路線、子路線、方向與站點
 
 ```bash
 python3 bus.py --route 1815 --debug
@@ -737,6 +800,13 @@ python3 bus.py --route 1815 --direction 1
 ```
 
 - 只顯示返程
+
+```bash
+python3 bus.py --route 1815 --subroute 1815E --direction 1 --stop 新山淨水場
+```
+
+- 只查 `1815E` 子路線
+- 並篩選返程與 `新山淨水場`
 
 ```bash
 python3 bus.py --route 1815 --stop 新山淨水場 --direction 0
