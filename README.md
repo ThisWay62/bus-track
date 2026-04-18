@@ -197,6 +197,20 @@ This will guide you through:
 3. direction
 4. stop selection, including an `all stops` option
 
+GUI window mode:
+
+```bash
+cd bus
+python3 bus.py --gui
+```
+
+This opens a separate window with dropdown selectors for:
+
+1. main route
+2. subroute
+3. direction
+4. stop, including an `all stops` option
+
 Basic query:
 
 ```bash
@@ -290,6 +304,13 @@ python3 bus.py
 
 - Start the interactive menu
 - Choose main route, subroute, direction, and stop step by step
+
+```bash
+python3 bus.py --gui
+```
+
+- Open a separate GUI window
+- Use dropdown selectors instead of terminal input
 
 ```bash
 python3 bus.py --route 1815 --debug
@@ -674,6 +695,20 @@ python3 bus.py
 3. 方向
 4. 站點，包含「全部站點」選項
 
+視窗模式：
+
+```bash
+cd bus
+python3 bus.py --gui
+```
+
+會開啟一個獨立視窗，讓你用下拉選單選：
+
+1. 主路線
+2. 子路線
+3. 方向
+4. 站點，包含「全部站點」
+
 基本查詢：
 
 ```bash
@@ -760,6 +795,13 @@ python3 bus.py
 
 - 啟動互動式選單
 - 依序選擇主路線、子路線、方向與站點
+
+```bash
+python3 bus.py --gui
+```
+
+- 開啟獨立 GUI 視窗
+- 改用下拉選單操作，不用在 terminal 一步一步輸入
 
 ```bash
 python3 bus.py --route 1815 --debug
